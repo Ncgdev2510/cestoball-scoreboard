@@ -39,7 +39,7 @@ export default function LicenseGate({ bootstrap, onRecheck, onQuit }: Props) {
             Activación requerida
           </h1>
           <p className="mt-2 text-sm text-slate-400 leading-relaxed">
-            Esta copia de Scoreboard Pro no tiene una licencia válida para este
+            Esta copia de Scoreboard Cestoball no tiene una licencia válida para este
             equipo. Copiá el ID de hardware y enviámelo para recibir el archivo{' '}
             <code className="text-amber-200/90">license.lic</code>. Luego
             colocá ese archivo en una de las rutas indicadas abajo y pulsá{' '}

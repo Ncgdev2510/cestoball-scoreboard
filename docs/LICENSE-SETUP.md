@@ -6,9 +6,9 @@ Este proyecto valida al arranque un archivo `license.lic` firmado con tu **clave
 
 ## Dónde busca la licencia la app
 
-1. **Junto al ejecutable** (tras instalar con **NSIS**, suele ser la carpeta de `Scoreboard Pro.exe`, p. ej. bajo `Program Files`).
+1. **Junto al ejecutable** (tras instalar con **NSIS**, suele ser la carpeta de `Scoreboard Cestoball.exe`, p. ej. bajo `Program Files`).
 2. **Carpeta de datos de la app** (fallback si no podés escribir junto al `.exe`):  
-   `%APPDATA%\scoreboard-pro\license.lic` (sigue el `name` de `package.json`).
+   `%APPDATA%\scoreboard-cestoball\license.lic` (sigue el `name` de `package.json`).
 
 Si la licencia no es válida, la app muestra una **pantalla de activación** con el ID de hardware y estas rutas; no hace falta usar solo el cuadro de diálogo del sistema.
 
@@ -65,7 +65,7 @@ El archivo es JSON, por ejemplo:
 }
 ```
 
-El cliente copia ese archivo a la carpeta del `.exe` o a `%APPDATA%\scoreboard-pro\`.
+El cliente copia ese archivo a la carpeta del `.exe` o a `%APPDATA%\scoreboard-cestoball\`.
 
 ## Formato criptográfico
 
@@ -91,7 +91,7 @@ En producción empaquetada esta variable **no** se recomienda documentar al clie
 npm run pack
 ```
 
-Salida típica en `release/`: instalador **NSIS** (`.exe` setup) para Windows x64. Tras instalar, el cliente puede colocar `license.lic` junto a `Scoreboard Pro.exe` o en `%APPDATA%\scoreboard-pro\` si no tiene permisos en la carpeta del programa.
+Salida típica en `release/`: instalador **NSIS** (`.exe` setup) para Windows x64. Tras instalar, el cliente puede colocar `license.lic` junto a `Scoreboard Cestoball.exe` o en `%APPDATA%\scoreboard-cestoball\` si no tiene permisos en la carpeta del programa.
 
 ## Seguridad y limitaciones (importante)
 

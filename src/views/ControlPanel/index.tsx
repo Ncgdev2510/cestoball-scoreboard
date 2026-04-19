@@ -23,7 +23,7 @@ export default function ControlPanel() {
             <Monitor size={16} />
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white leading-none">Scoreboard Pro</h1>
+            <h1 className="text-sm font-bold text-white leading-none">Scoreboard Cestoball</h1>
             <span className="text-xs text-gray-500">Panel de Control</span>
           </div>
         </div>
@@ -86,30 +86,7 @@ export default function ControlPanel() {
             <TeamCard team="away" />
           </div>
           
-          <div className="mt-auto">
-            <div className="flex flex-col gap-3">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">Estado</span>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase">Local</span>
-                  <span className="text-3xl font-black text-white leading-tight">{state.home.score}</span>
-                  <span className="text-[10px] text-amber-500 font-bold">Minutos: {state.home.timeouts}</span>
-                </div>
-                <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase">Reloj</span>
-                  <span className="text-lg font-mono font-bold text-white leading-tight">
-                    {String(Math.floor(Math.ceil(state.remainingMs / 1000) / 60)).padStart(2, '0')}:{String(Math.ceil(state.remainingMs / 1000) % 60).padStart(2, '0')}
-                  </span>
-                  <div className={`w-1.5 h-1.5 rounded-full mt-1 ${state.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
-                </div>
-                <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase">Visit.</span>
-                  <span className="text-3xl font-black text-white leading-tight">{state.away.score}</span>
-                  <span className="text-[10px] text-amber-500 font-bold">Minutos: {state.away.timeouts}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
 

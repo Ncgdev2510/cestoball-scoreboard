@@ -1,11 +1,11 @@
 {
-  "name": "scoreboard-pro",
+  "name": "scoreboard-cestoball",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "main": "dist-electron/main.cjs",
   "description": "Panel y marcador (Electron + Vite + React)",
-  "author": "",
+  "author": "nataliagristelli@gmail.com",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -51,8 +51,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.scoreboard.pro",
-    "productName": "Scoreboard Pro",
+    "appId": "com.scoreboard.cestoball",
+    "productName": "Scoreboard Cestoball",
     "copyright": "Copyright © ${author}",
     "directories": {
       "output": "release"

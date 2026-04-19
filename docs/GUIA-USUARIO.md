@@ -1,4 +1,4 @@
-# Guía para el usuario — Scoreboard Pro
+# Guía para el usuario — Scoreboard Cestoball
 
 **Versión corta (correo / imprimir):** [RESUMEN-CLIENTE.md](RESUMEN-CLIENTE.md) · [RESUMEN-CLIENTE.html](RESUMEN-CLIENTE.html) (abrir en el navegador y usar *Imprimir → Guardar como PDF*).
 
@@ -16,7 +16,7 @@ Esta guía está pensada para quien **instala y usa** la aplicación en una comp
 
 ## 2. Antes de instalar
 
-1. Cerrá otras versiones de Scoreboard Pro si las hubiera.
+1. Cerrá otras versiones de Scoreboard Cestoball si las hubiera.
 2. Tené a mano el instalador que te enviaron (archivo `.exe` del tipo instalador NSIS).
 3. Tené el archivo **`license.lic`** listo (por correo, pendrive, etc.). Podés copiarlo **después** de instalar; no es obligatorio tenerlo antes del instalador.
 
@@ -24,7 +24,7 @@ Esta guía está pensada para quien **instala y usa** la aplicación en una comp
 
 ## 3. Instalar el programa
 
-1. Hacé doble clic en el **instalador** de Scoreboard Pro.
+1. Hacé doble clic en el **instalador** de Scoreboard Cestoball.
 2. Si Windows muestra **SmartScreen** o “Windows protegió tu PC”, es habitual en software no firmado aún con certificado comercial. Solo podés continuar si confiás en el origen del instalador.
 3. Seguí el asistente:
    - Elegí la carpeta de instalación si el asistente lo permite.
@@ -33,7 +33,7 @@ Esta guía está pensada para quien **instala y usa** la aplicación en una comp
 
 Al terminar, el programa suele quedar en una carpeta similar a:
 
-`C:\Program Files\Scoreboard Pro\`
+`C:\Program Files\Scoreboard Cestoball\`
 
 (el nombre exacto puede variar según lo que elegiste al instalar).
 
@@ -71,12 +71,12 @@ En esa pantalla vas a ver:
 El programa busca el archivo en este **orden**:
 
 1. **Misma carpeta que el ejecutable**  
-   Donde esté `Scoreboard Pro.exe` (por ejemplo la carpeta de instalación bajo `Program Files\Scoreboard Pro\`).  
+   Donde esté `Scoreboard Cestoball.exe` (por ejemplo la carpeta de instalación bajo `Program Files\Scoreboard Cestoball\`).  
    **Nota:** en algunas instalaciones esta carpeta es de **solo lectura** para usuarios normales. Si no podés pegar el archivo ahí, usá la opción 2.
 
 2. **Carpeta de datos de la aplicación**  
-   `C:\Users\<tu_usuario>\AppData\Roaming\scoreboard-pro\license.lic`  
-   (La carpeta `AppData` suele estar oculta: en el Explorador podés escribir `%APPDATA%\scoreboard-pro` en la barra de direcciones y pulsar Enter.)
+   `C:\Users\<tu_usuario>\AppData\Roaming\scoreboard-cestoball\license.lic`  
+   (La carpeta `AppData` suele estar oculta: en el Explorador podés escribir `%APPDATA%\scoreboard-cestoball` en la barra de direcciones y pulsar Enter.)
 
 Solo necesitás **un** archivo `license.lic` en **una** de esas ubicaciones.
 
@@ -86,13 +86,13 @@ Solo necesitás **un** archivo `license.lic` en **una** de esas ubicaciones.
 
 ### Panel de control
 
-Al abrir Scoreboard Pro (sin `?view=scoreboard` en la dirección) se muestra el **panel de control** para operar tiempo, goles, equipos, etc.
+Al abrir Scoreboard Cestoball (sin `?view=scoreboard` en la dirección) se muestra el **panel de control** para operar tiempo, goles, equipos, etc.
 
 ### Pantalla de marcador (segunda pantalla o proyector)
 
 Para mostrar solo el marcador en otra ventana o monitor:
 
-1. Abrí de nuevo Scoreboard Pro (o una segunda ventana, según cómo lo configures).
+1. Abrí de nuevo Scoreboard Cestoball (o una segunda ventana, según cómo lo configures).
 2. En la barra de direcciones interna o el enlace que uses, agregá al final de la URL:  
    `?view=scoreboard`   Ejemplo conceptual: si la app abre en una página interna, la variante “marcador” es la misma aplicación con ese parámetro.
 
@@ -115,7 +115,7 @@ Los datos del partido se sincronizan entre panel y marcador cuando usás la mism
 | Situación | Qué probar |
 |-----------|------------|
 | “Activación requerida” después de pegar la licencia | Confirmá que el archivo se llama exactamente `license.lic`, que está en una de las rutas indicadas y que la licencia fue hecha **para este** ID de hardware. Pulsá **Reintentar**. |
-| No puedo guardar `license.lic` junto al `.exe` | Usá `%APPDATA%\scoreboard-pro\license.lic`. |
+| No puedo guardar `license.lic` junto al `.exe` | Usá `%APPDATA%\scoreboard-cestoball\license.lic`. |
 | Cambié de disco o reinstalé Windows | El ID de hardware puede cambiar; pedí una licencia nueva al proveedor. |
 | La app no abre | Reinstalá con el instalador oficial; si persiste, contactá al proveedor con capturas de pantalla o mensaje de error. |
 

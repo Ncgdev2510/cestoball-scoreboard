@@ -1,4 +1,4 @@
-# Guía para el administrador / proveedor — Scoreboard Pro
+# Guía para el administrador / proveedor — Scoreboard Cestoball
 
 Esta guía describe el **ciclo completo** para preparar el producto, generar licencias, empaquetar el instalador Windows (NSIS) y acompañar al usuario final. Está alineada con el código del repositorio (Electron + `electron-builder` + licencia por HWID y firma RSA).
 
@@ -146,8 +146,8 @@ Si rotás claves: nuevo `gen-keys`, nuevo `build:electron`, nuevo `pack`, y **nu
 
 1. Instalar con el `.exe` NSIS que le enviás.
 2. Copiar `license.lic` a:
-   - carpeta de `Scoreboard Pro.exe`, **o**
-   - `%APPDATA%\scoreboard-pro\license.lic`
+   - carpeta de `Scoreboard Cestoball.exe`, **o**
+   - `%APPDATA%\scoreboard-cestoball\license.lic`
 3. Abrir la aplicación; si ve la pantalla de activación, pulsar **Reintentar** tras colocar el archivo.
 
 Material para el cliente:

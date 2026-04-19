@@ -1,4 +1,4 @@
-# Scoreboard Pro — Resumen rápido (cliente)
+# Scoreboard Cestoball — Resumen rápido (cliente)
 
 **Qué necesitás:** Windows 64 bits, el instalador que te enviamos y el archivo **`license.lic`** hecho **para tu PC** (no sirve copiarlo de otra máquina).
 
@@ -13,8 +13,8 @@
 
 Colocá el archivo en **una** de estas carpetas:
 
-- Junto a **`Scoreboard Pro.exe`** (carpeta donde quedó instalado el programa), **o**
-- `%APPDATA%\scoreboard-pro\` — en el Explorador de archivos podés pegar esa ruta en la barra de direcciones.
+- Junto a **`Scoreboard Cestoball.exe`** (carpeta donde quedó instalado el programa), **o**
+- `%APPDATA%\scoreboard-cestoball\` — en el Explorador de archivos podés pegar esa ruta en la barra de direcciones.
 
 El nombre del archivo debe ser exactamente: **`license.lic`**
 
