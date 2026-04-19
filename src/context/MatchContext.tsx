@@ -27,6 +27,7 @@ interface MatchContextValue {
   setMatchName: (name: string) => void;
   toggleHalftime: () => void;
   triggerTriple: (team: 'home' | 'away') => void;
+  triggerTimeout: (team: 'home' | 'away') => void;
   triggerAlarm: () => void;
   newMatch: () => void;
 }
@@ -65,7 +66,12 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     stopInterval();
     lastTickRef.current = Date.now();
     alarmFiredRef.current = false;
-    setState(prev => ({ ...prev, isRunning: true }));
+    setState(prev => {
+      if (prev.remainingMs === prev.clockInitialMs) {
+        playAlarm('buzzer', alarmVolume);
+      }
+      return { ...prev, isRunning: true };
+    });
     intervalRef.current = window.setInterval(() => {
       const now = Date.now();
       const elapsed = now - (lastTickRef.current ?? now);
@@ -74,7 +80,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
         const next = Math.max(0, prev.remainingMs - elapsed);
         if (next === 0 && !alarmFiredRef.current) {
           alarmFiredRef.current = true;
-          playAlarm(alarmType, alarmVolume);
+          playAlarm('buzzer', alarmVolume); // Siempre bocina al final
           emitBoardEvent({ type: 'alarm' });
           stopInterval();
           const updated = { ...prev, remainingMs: 0, isRunning: false };
@@ -154,6 +160,23 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     emitBoardEvent({ type: 'triple', team });
   }, []);
 
+  const triggerTimeout = useCallback((team: 'home' | 'away') => {
+    setState(prev => {
+      const currentTimeout = prev[team].timeouts || 0;
+      if (currentTimeout >= 3) return prev; // Solo se pueden pedir 3 minutos por equipo
+      
+      const nextTimeout = currentTimeout + 1;
+      const nextState = {
+        ...prev,
+        [team]: { ...prev[team], timeouts: nextTimeout }
+      };
+      
+      playAlarm('whistle-short', alarmVolume);
+      emitBoardEvent({ type: 'timeout', team });
+      return nextState;
+    });
+  }, [setState, alarmVolume]);
+
   const triggerAlarm = useCallback(() => {
     playAlarm(alarmType, alarmVolume);
     emitBoardEvent({ type: 'alarm' });
@@ -182,7 +205,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
       setClockTime, setExtraTime,
       updateScore, setTeamName, setTeamLogo,
       setMatchName, toggleHalftime,
-      triggerTriple, triggerAlarm, newMatch,
+      triggerTriple, triggerTimeout, triggerAlarm, newMatch,
     }}>
       {children}
     </MatchContext.Provider>
