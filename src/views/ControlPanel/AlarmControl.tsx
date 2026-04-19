@@ -4,25 +4,24 @@ import { AlarmType } from '../../utils/audio';
 
 const ALARM_OPTIONS: { value: AlarmType; label: string }[] = [
   { value: 'buzzer', label: 'Bocina' },
-  { value: 'whistle', label: 'Silbato' },
-  { value: 'horn', label: 'Corneta' },
+  { value: 'whistle-short', label: 'Silbato Corto' },
+  { value: 'whistle-long', label: 'Silbato Largo' },
 ];
 
 export default function AlarmControl() {
   const { alarmType, setAlarmType, alarmVolume, setAlarmVolume, triggerAlarm } = useMatch();
 
   return (
-    <div className="flex flex-col gap-3">
-      <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Alarma</span>
-      <div className="flex gap-2">
+    <div className="flex flex-col gap-5">
+      <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/5">
         {ALARM_OPTIONS.map(opt => (
           <button
             key={opt.value}
             onClick={() => setAlarmType(opt.value)}
-            className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${
               alarmType === opt.value
-                ? 'bg-blue-600 text-white border border-blue-500'
-                : 'bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-500'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-transparent text-gray-500 hover:text-gray-300'
             }`}
           >
             {opt.label}
@@ -30,25 +29,26 @@ export default function AlarmControl() {
         ))}
       </div>
 
-      <div className="flex items-center gap-3">
-        <Volume2 size={16} className="text-gray-500 shrink-0" />
+      <div className="flex items-center gap-4 group">
+        <Volume2 size={20} className="text-gray-500 group-hover:text-gray-300 transition-colors shrink-0" />
         <input
           type="range"
           min={0}
           max={100}
           value={alarmVolume}
           onChange={e => setAlarmVolume(Number(e.target.value))}
-          className="flex-1 accent-blue-500 h-2"
+          className="flex-1 accent-blue-500 h-1.5 bg-gray-800 rounded-full appearance-none cursor-pointer"
         />
-        <span className="text-xs text-gray-400 w-8 text-right">{alarmVolume}%</span>
+        <span className="text-sm font-bold text-gray-400 w-10 text-right">{alarmVolume}%</span>
       </div>
 
       <button
         onClick={triggerAlarm}
-        className="w-full bg-red-700 hover:bg-red-600 active:bg-red-800 text-white font-bold py-3 rounded-xl transition-all active:scale-95 text-sm shadow-lg border border-red-600/40"
+        className="w-full bg-[#bd1e1e] hover:bg-[#d42222] active:bg-[#a61a1a] text-white font-black py-5 rounded-2xl transition-all active:scale-95 text-lg shadow-xl uppercase tracking-widest border border-white/5"
       >
-        Probar Bocina
+        Chicharra
       </button>
     </div>
   );
 }
+

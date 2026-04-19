@@ -16,7 +16,14 @@ export function loadState(): MatchState | null {
     const raw = localStorage.getItem(STATE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as MatchState;
-    return { ...DEFAULT_MATCH_STATE, ...parsed };
+    
+    // Ensure nested objects have default values for new properties
+    return {
+      ...DEFAULT_MATCH_STATE,
+      ...parsed,
+      home: { ...DEFAULT_MATCH_STATE.home, ...parsed.home },
+      away: { ...DEFAULT_MATCH_STATE.away, ...parsed.away },
+    };
   } catch {
     return null;
   }
@@ -27,7 +34,7 @@ export function clearState(): void {
 }
 
 export interface BoardEvent {
-  type: 'triple' | 'alarm';
+  type: 'triple' | 'alarm' | 'timeout';
   team?: 'home' | 'away';
   timestamp: number;
 }
