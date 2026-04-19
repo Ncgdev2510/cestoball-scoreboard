@@ -11,9 +11,16 @@ interface TripleAnim {
 export default function Scoreboard() {
   const [state, setState] = useState<MatchState>(() => loadState() ?? DEFAULT_MATCH_STATE);
   const [triple, setTriple] = useState<TripleAnim | null>(null);
+  const [timeoutMsg, setTimeoutMsg] = useState<{ text: string; id: number } | null>(null);
   const [alarmFlash, setAlarmFlash] = useState(false);
   const tripleTimeoutRef = useRef<number | null>(null);
+  const timeoutMsgTimeoutRef = useRef<number | null>(null);
   const alarmTimeoutRef = useRef<number | null>(null);
+
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     const offState = onStateChange(s => setState(s));
@@ -22,6 +29,20 @@ export default function Scoreboard() {
         if (tripleTimeoutRef.current) clearTimeout(tripleTimeoutRef.current);
         setTriple({ team: event.team, id: event.timestamp });
         tripleTimeoutRef.current = window.setTimeout(() => setTriple(null), 3000);
+      }
+      if (event.type === 'timeout' && event.team) {
+        if (timeoutMsgTimeoutRef.current) clearTimeout(timeoutMsgTimeoutRef.current);
+        
+        // Use loadState for immediate fresh value after storage event
+        const storageState = loadState();
+        // If storageState has the data, use it. Otherwise, look at our current state and assume it will be incremented.
+        const currentCount = storageState ? (storageState[event.team].timeouts || 0) : ((stateRef.current[event.team].timeouts || 0) + 1);
+        const count = Math.min(3, currentCount); // Ensure it's between 1 and 3
+        
+        const teamLabel = event.team === 'home' ? 'Local' : 'Visitante';
+        
+        setTimeoutMsg({ text: `Minuto ${count} ${teamLabel}`, id: event.timestamp });
+        timeoutMsgTimeoutRef.current = window.setTimeout(() => setTimeoutMsg(null), 3000);
       }
       if (event.type === 'alarm') {
         if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
@@ -87,15 +108,20 @@ export default function Scoreboard() {
         </div>
       </div>
 
-      {/* Triple Label */}
-      {triple && (
-        <div className={`absolute inset-x-0 top-1/3 flex justify-center pointer-events-none`}
-          style={{ transform: 'translateY(-50%)' }}>
-          <div className={`triple-banner text-5xl font-black uppercase tracking-widest ${triple.team === 'home' ? 'text-amber-400' : 'text-amber-400'}`}>
+      {/* Labels: Triple & Timeout */}
+      <div className="absolute inset-x-0 top-1/3 flex flex-col items-center gap-4 pointer-events-none"
+        style={{ transform: 'translateY(-50%)' }}>
+        {triple && (
+          <div className="triple-banner text-5xl font-black uppercase tracking-widest text-amber-400">
             ¡TRIPLE!
           </div>
-        </div>
-      )}
+        )}
+        {timeoutMsg && (
+          <div className="timeout-banner text-5xl font-black uppercase tracking-widest text-blue-400">
+            {timeoutMsg.text}
+          </div>
+        )}
+      </div>
 
       {/* Halftime overlay */}
       {isHalftime && (

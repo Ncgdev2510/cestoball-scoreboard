@@ -4,6 +4,7 @@ export interface Team {
   name: string;
   logo?: string;
   score: number;
+  timeouts: number;
 }
 
 export interface MatchState {
@@ -20,10 +21,11 @@ export type TripleAnimation = { team: 'home' | 'away'; triggeredAt: number } | n
 
 export const DEFAULT_MATCH_STATE: MatchState = {
   matchName: 'Partido',
-  home: { name: 'Local', score: 0 },
-  away: { name: 'Visitante', score: 0 },
+  home: { name: 'Local', score: 0, timeouts: 0 },
+  away: { name: 'Visitante', score: 0, timeouts: 0 },
   remainingMs: 20 * 60 * 1000,
   isRunning: false,
   period: 'normal',
   clockInitialMs: 20 * 60 * 1000,
 };
+

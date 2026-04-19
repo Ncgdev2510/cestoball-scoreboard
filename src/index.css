@@ -36,6 +36,12 @@
   letter-spacing: 0.2em;
 }
 
+.timeout-banner {
+  animation: triple-banner-in 3s ease-out forwards;
+  text-shadow: 0 0 40px #3b82f6, 0 4px 20px rgba(0,0,0,0.8);
+  letter-spacing: 0.2em;
+}
+
 /* Halftime overlay */
 @keyframes halftime-in {
   from { opacity: 0; }

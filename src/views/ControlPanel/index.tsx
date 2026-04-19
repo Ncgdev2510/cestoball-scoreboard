@@ -49,66 +49,70 @@ export default function ControlPanel() {
       </header>
 
       {/* Main grid */}
-      <div className="flex-1 grid grid-cols-[1fr_auto_1fr] gap-0 overflow-hidden">
+      <div className="flex-1 grid grid-cols-[1fr_1.4fr_1fr] gap-0 overflow-hidden">
         {/* Left: Home team */}
-        <div className="flex flex-col gap-4 p-5 border-r border-gray-800/60">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-8 p-8 border-r border-white/5 bg-[#0d0d0d]">
+          <ScoreControl team="home" />
+          <div className="max-w-[200px] mx-auto w-full">
             <TeamCard team="home" />
-            <div className="flex flex-col justify-end">
-              <ScoreControl team="home" />
-            </div>
           </div>
+          
           <div className="mt-auto">
-            <div className="p-4 bg-gray-900/50 rounded-xl border border-gray-800/60">
+            <div className="flex flex-col gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">Acciones</span>
               <ExtrasControl />
             </div>
           </div>
         </div>
 
-        {/* Center: Clock */}
-        <div className="flex flex-col items-center justify-center p-6 w-72 border-r border-gray-800/60">
-          <div className="w-full p-5 bg-gray-900/50 rounded-2xl border border-gray-800/60">
+        {/* Center: Clock & Alarms */}
+        <div className="flex flex-col gap-8 p-8 border-r border-white/5 bg-[#080808]">
+          <div className="flex-1 flex flex-col items-center justify-center">
             <ClockControl />
           </div>
-          <div className="mt-4 w-full p-4 bg-gray-900/50 rounded-xl border border-gray-800/60">
-            <AlarmControl />
+          
+          <div className="mt-auto border-t border-white/5 pt-8">
+            <div className="flex flex-col gap-3 max-w-2xl mx-auto w-full">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">Alarma</span>
+              <AlarmControl />
+            </div>
           </div>
         </div>
 
         {/* Right: Away team */}
-        <div className="flex flex-col gap-4 p-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col justify-end">
-              <ScoreControl team="away" />
-            </div>
+        <div className="flex flex-col gap-8 p-8 bg-[#0d0d0d]">
+          <ScoreControl team="away" />
+          <div className="max-w-[200px] mx-auto w-full">
             <TeamCard team="away" />
           </div>
+          
           <div className="mt-auto">
-            <div className="p-4 bg-gray-900/50 rounded-xl border border-gray-800/60">
-              <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Estado</span>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-gray-800 rounded-lg p-2">
-                    <div className="text-xs text-gray-500 mb-1">Local</div>
-                    <div className="text-2xl font-black text-white">{state.home.score}</div>
-                  </div>
-                  <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center justify-center">
-                    <div className="text-xs text-gray-500">Reloj</div>
-                    <div className="text-sm font-mono font-bold text-white mt-1">
-                      {String(Math.floor(Math.ceil(state.remainingMs / 1000) / 60)).padStart(2, '0')}:{String(Math.ceil(state.remainingMs / 1000) % 60).padStart(2, '0')}
-                    </div>
-                    <div className={`w-2 h-2 rounded-full mt-1 ${state.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
-                  </div>
-                  <div className="bg-gray-800 rounded-lg p-2">
-                    <div className="text-xs text-gray-500 mb-1">Visit.</div>
-                    <div className="text-2xl font-black text-white">{state.away.score}</div>
-                  </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-600">Estado</span>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase">Local</span>
+                  <span className="text-3xl font-black text-white leading-tight">{state.home.score}</span>
+                  <span className="text-[10px] text-amber-500 font-bold">Minutos: {state.home.timeouts}</span>
+                </div>
+                <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase">Reloj</span>
+                  <span className="text-lg font-mono font-bold text-white leading-tight">
+                    {String(Math.floor(Math.ceil(state.remainingMs / 1000) / 60)).padStart(2, '0')}:{String(Math.ceil(state.remainingMs / 1000) % 60).padStart(2, '0')}
+                  </span>
+                  <div className={`w-1.5 h-1.5 rounded-full mt-1 ${state.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
+                </div>
+                <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col items-center">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase">Visit.</span>
+                  <span className="text-3xl font-black text-white leading-tight">{state.away.score}</span>
+                  <span className="text-[10px] text-amber-500 font-bold">Minutos: {state.away.timeouts}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }
