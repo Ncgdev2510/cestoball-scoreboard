@@ -64,6 +64,7 @@ async function createWindow(): Promise<void> {
     width: 1280,
     height: 800,
     show: false,
+    icon: path.join(__dirname, '..', app.isPackaged ? 'dist' : 'public', 'logo.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
