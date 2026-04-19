@@ -24,9 +24,10 @@ export default function ClockControl() {
 
   return (
     <div className="flex flex-col items-center gap-6 w-full">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20">
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-bold uppercase tracking-[0.2em] px-4 py-1.5 rounded-full text-amber-400 bg-amber-400/10 border border-amber-400/20 flex items-center gap-2">
           {periodLabel[state.period]}
+          <div className={`w-2 h-2 rounded-full ${state.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
         </span>
       </div>
 

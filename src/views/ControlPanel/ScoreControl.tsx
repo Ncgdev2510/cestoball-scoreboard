@@ -17,8 +17,13 @@ export default function ScoreControl({ team }: Props) {
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-sm mx-auto">
-      <div className="text-[12rem] font-black text-white tabular-nums leading-none select-none tracking-tighter" style={{ textShadow: '0 0 40px rgba(255,255,255,0.1)' }}>
-        {score}
+      <div className="flex flex-col items-center">
+        <div className="text-[12rem] font-black text-white tabular-nums leading-none select-none tracking-tighter" style={{ textShadow: '0 0 40px rgba(255,255,255,0.1)' }}>
+          {score}
+        </div>
+        <div className="text-xl font-bold text-amber-500 uppercase tracking-widest mt-[-1rem] mb-4">
+          Minutos: {state[team].timeouts}
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3 w-full">
         {SCORE_BUTTONS.map(btn => (

@@ -70,7 +70,7 @@ export default function Scoreboard() {
         <TeamBadge team="home" state={state} side="left" />
         <div className="flex flex-col items-center gap-1">
           {state.matchName && (
-            <span className="text-gray-500 text-sm font-medium uppercase tracking-widest">{state.matchName}</span>
+            <span className="text-white font-bold text-2xl uppercase tracking-widest">{state.matchName}</span>
           )}
           {state.period !== 'normal' && (
             <span className="text-amber-400 text-xs font-bold uppercase tracking-widest px-3 py-1 border border-amber-400/30 rounded-full">
@@ -103,13 +103,13 @@ export default function Scoreboard() {
         <div className={`font-black tabular-nums transition-colors duration-300 ${
           clockLow ? 'text-red-500 clock-urgent' : 'text-white'
         }`}
-          style={{ fontSize: 'clamp(4rem, 12vw, 9rem)', lineHeight: 1, letterSpacing: '-0.02em' }}>
+          style={{ fontSize: 'clamp(4rem, 12vw, 16rem)', lineHeight: 1, letterSpacing: '-0.02em' }}>
           {formatMs(state.remainingMs)}
         </div>
       </div>
 
       {/* Labels: Triple & Timeout */}
-      <div className="absolute inset-x-0 top-1/3 flex flex-col items-center gap-4 pointer-events-none"
+      <div className="absolute inset-x-0 top-1/4 flex flex-col items-center gap-4 pointer-events-none"
         style={{ transform: 'translateY(-50%)' }}>
         {triple && (
           <div className="triple-banner text-5xl font-black uppercase tracking-widest text-amber-400">
@@ -151,15 +151,15 @@ function TeamBadge({ team, state, side }: { team: 'home' | 'away'; state: MatchS
   const teamData = state[team];
   return (
     <div className={`flex items-center gap-4 ${side === 'right' ? 'flex-row-reverse' : ''}`} style={{ minWidth: '28%' }}>
-      <div className="w-16 h-16 shrink-0 flex items-center justify-center">
+      <div className="w-24 h-24 shrink-0 flex items-center justify-center">
         {teamData.logo ? (
           <img src={teamData.logo} alt="logo" className="w-full h-full object-contain" />
         ) : (
-          <div className="w-14 h-14 rounded-xl bg-gray-900 border border-gray-800" />
+          <div className="w-24 h-24 rounded-xl bg-gray-900 border border-gray-800" />
         )}
       </div>
       <span className={`text-white font-black uppercase tracking-wide leading-tight ${side === 'right' ? 'text-right' : 'text-left'}`}
-        style={{ fontSize: 'clamp(1rem, 2.5vw, 1.75rem)' }}>
+        style={{ fontSize: 'clamp(1rem, 2.5vw, 3rem)' }}>
         {teamData.name}
       </span>
     </div>
@@ -169,7 +169,7 @@ function TeamBadge({ team, state, side }: { team: 'home' | 'away'; state: MatchS
 function ScoreNum({ score, flashing }: { score: number; flashing: boolean }) {
   return (
     <div className={`font-black tabular-nums leading-none select-none ${flashing ? 'triple-score-flash' : 'text-white'}`}
-      style={{ fontSize: 'clamp(5rem, 18vw, 14rem)', lineHeight: 1 }}>
+      style={{ fontSize: 'clamp(4rem, 20vw, 32rem)', lineHeight: 1 }}>
       {String(score).padStart(2, '0')}
     </div>
   );
