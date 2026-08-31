@@ -32,12 +32,13 @@ export default function Scoreboard() {
       }
       if (event.type === 'timeout' && event.team) {
         if (timeoutMsgTimeoutRef.current) clearTimeout(timeoutMsgTimeoutRef.current);
-        
-        // Use loadState for immediate fresh value after storage event
+
+        // Prefer explicit timeout number from event to avoid race conditions.
         const storageState = loadState();
-        // If storageState has the data, use it. Otherwise, look at our current state and assume it will be incremented.
-        const currentCount = storageState ? (storageState[event.team].timeouts || 0) : ((stateRef.current[event.team].timeouts || 0) + 1);
-        const count = Math.min(3, currentCount); // Ensure it's between 1 and 3
+        const fallbackCount = storageState
+          ? (storageState[event.team].timeouts || 0)
+          : ((stateRef.current[event.team].timeouts || 0) + 1);
+        const count = Math.min(3, event.count ?? fallbackCount);
         
         const teamLabel = event.team === 'home' ? 'Local' : 'Visitante';
         
@@ -57,10 +58,13 @@ export default function Scoreboard() {
   const clockLow = state.remainingMs < 30000 && state.remainingMs > 0;
 
   const periodLabel: Record<string, string> = {
+    '1st': '',
     normal: '',
+    '2nd': '2DO TIEMPO',
     extra1: 'PRÓRROGA 1',
     extra2: 'PRÓRROGA 2',
     halftime: 'ENTRETIEMPO',
+    finished: 'FINALIZADO',
   };
 
   return (
@@ -72,9 +76,9 @@ export default function Scoreboard() {
           {state.matchName && (
             <span className="text-white font-bold text-2xl uppercase tracking-widest">{state.matchName}</span>
           )}
-          {state.period !== 'normal' && (
+          {state.period !== 'normal' && state.period !== '1st' && (
             <span className="text-amber-400 text-xs font-bold uppercase tracking-widest px-3 py-1 border border-amber-400/30 rounded-full">
-              {periodLabel[state.period]}
+              {periodLabel[state.period] || state.period.toUpperCase()}
             </span>
           )}
         </div>

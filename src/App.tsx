@@ -2,12 +2,23 @@ import { useEffect, useState, useCallback } from 'react';
 import { MatchProvider } from './context/MatchContext';
 import ControlPanel from './views/ControlPanel';
 import Scoreboard from './views/Scoreboard';
+import Overlay from './views/Overlay';
+import MobileControl from './views/MobileControl';
 import LicenseGate from './views/LicenseGate';
 import type { LicenseBootstrap } from './types/licenseBootstrap';
 
-function getViewMode(): 'control' | 'scoreboard' {
+function getViewMode(): 'control' | 'scoreboard' | 'overlay' | 'mobile' {
   const params = new URLSearchParams(window.location.search);
-  return params.get('view') === 'scoreboard' ? 'scoreboard' : 'control';
+  const view = params.get('view');
+  if (view === 'scoreboard') return 'scoreboard';
+  if (view === 'overlay') return 'overlay';
+  if (view === 'mobile') return 'mobile';
+  
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return 'mobile';
+  }
+  
+  return 'control';
 }
 
 async function fetchBootstrap(): Promise<LicenseBootstrap> {
@@ -49,6 +60,25 @@ export default function App() {
     void window.scoreboardElectron?.quitApp?.();
   }, []);
 
+  const view = getViewMode();
+
+  // Direct render for Overlay, Scoreboard, and Mobile control
+  if (view === 'overlay') {
+    return <Overlay />;
+  }
+
+  if (view === 'scoreboard') {
+    return <Scoreboard />;
+  }
+
+  if (view === 'mobile') {
+    return (
+      <MatchProvider>
+        <MobileControl />
+      </MatchProvider>
+    );
+  }
+
   if (!bootstrap) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">
@@ -65,12 +95,6 @@ export default function App() {
         onQuit={handleQuit}
       />
     );
-  }
-
-  const view = getViewMode();
-
-  if (view === 'scoreboard') {
-    return <Scoreboard />;
   }
 
   return (

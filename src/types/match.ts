@@ -1,4 +1,4 @@
-export type Period = 'normal' | 'extra1' | 'extra2' | 'halftime';
+export type Period = '1st' | '2nd' | 'halftime' | 'extra1' | 'extra2' | 'finished' | 'normal';
 
 export interface Team {
   name: string;

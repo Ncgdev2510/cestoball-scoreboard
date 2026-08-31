@@ -1,10 +1,10 @@
 {
   "name": "scoreboard-cestoball",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist-electron/main.cjs",
-  "description": "Panel y marcador (Electron + Vite + React)",
+  "description": "Tablero deportivo para partidos de cestoball. Con una vista de un Panel controlador y otra vista del marcador visible al público. (Electron + Vite + React + TailwindCSS)",
   "author": "nataliagristelli@gmail.com",
   "scripts": {
     "dev": "vite",
@@ -25,12 +25,14 @@
     "@supabase/supabase-js": "^2.57.4",
     "lucide-react": "^0.344.0",
     "node-machine-id": "^1.1.12",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@types/node": "^22.10.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -56,7 +58,7 @@
     "copyright": "Copyright © ${author}",
     "directories": {
       "output": "release"
-    },   
+    },
     "files": [
       "dist/**/*",
       "dist-electron/**/*",

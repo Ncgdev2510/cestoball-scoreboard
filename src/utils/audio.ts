@@ -31,21 +31,6 @@ function createWhistle(ctx: AudioContext, volume: number, isShort = false): void
   osc.stop(ctx.currentTime + duration);
 }
 
-function createHorn(ctx: AudioContext, volume: number): void {
-  const frequencies = [220, 440, 880];
-  frequencies.forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'square';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime((volume * 0.3) / (i + 1), ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 2);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 2);
-  });
-}
 
 const SOUND_FILES: Record<AlarmType, string> = {
   'buzzer': '/sounds/buzzer.wav',

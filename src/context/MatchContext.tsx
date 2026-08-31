@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import { MatchState, DEFAULT_MATCH_STATE, Period } from '../types/match';
 import { AlarmType, playAlarm } from '../utils/audio';
-import { saveState, loadState, emitBoardEvent } from '../utils/storage';
+import { saveState, loadState, emitBoardEvent, onStateChange } from '../utils/storage';
 
 interface MatchContextValue {
   state: MatchState;
@@ -22,11 +22,15 @@ interface MatchContextValue {
   setClockTime: (ms: number) => void;
   setExtraTime: () => void;
   updateScore: (team: 'home' | 'away', delta: number) => void;
+  setScore: (team: 'home' | 'away', score: number) => void;
   setTeamName: (team: 'home' | 'away', name: string) => void;
   setTeamLogo: (team: 'home' | 'away', logo: string) => void;
   setMatchName: (name: string) => void;
+  setPeriod: (period: Period, clockMs?: number) => void;
   toggleHalftime: () => void;
   triggerTriple: (team: 'home' | 'away') => void;
+  announceTimeout: (team: 'home' | 'away', count: number) => void;
+  commitTimeout: (team: 'home' | 'away') => void;
   triggerTimeout: (team: 'home' | 'away') => void;
   triggerAlarm: () => void;
   newMatch: () => void;
@@ -45,6 +49,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
   const intervalRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
   const alarmFiredRef = useRef(false);
+  const startAlarmPendingRef = useRef(true);
 
   const setState = useCallback((updater: MatchState | ((prev: MatchState) => MatchState)) => {
     setStateRaw(prev => {
@@ -67,9 +72,18 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     lastTickRef.current = Date.now();
     alarmFiredRef.current = false;
     setState(prev => {
-      if (prev.remainingMs === prev.clockInitialMs) {
+      const isOfficialStartTime =
+        prev.remainingMs === 20 * 60 * 1000 || prev.remainingMs === 3 * 60 * 1000;
+
+      if (
+        startAlarmPendingRef.current &&
+        prev.remainingMs === prev.clockInitialMs &&
+        isOfficialStartTime
+      ) {
         playAlarm('buzzer', alarmVolume);
       }
+
+      startAlarmPendingRef.current = false;
       return { ...prev, isRunning: true };
     });
     intervalRef.current = window.setInterval(() => {
@@ -102,6 +116,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
   const resetClock = useCallback(() => {
     stopInterval();
     alarmFiredRef.current = false;
+    startAlarmPendingRef.current = true;
     setState(prev => ({
       ...prev,
       remainingMs: prev.clockInitialMs,
@@ -112,6 +127,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
   const setClockTime = useCallback((ms: number) => {
     stopInterval();
     alarmFiredRef.current = false;
+    startAlarmPendingRef.current = false;
     setState(prev => ({ ...prev, remainingMs: ms, clockInitialMs: ms, isRunning: false }));
   }, [stopInterval, setState]);
 
@@ -119,6 +135,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     const extraMs = 3 * 60 * 1000;
     stopInterval();
     alarmFiredRef.current = false;
+    startAlarmPendingRef.current = true;
     setState(prev => ({
       ...prev,
       remainingMs: extraMs,
@@ -135,6 +152,13 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [setState]);
 
+  const setScore = useCallback((team: 'home' | 'away', score: number) => {
+    setState(prev => ({
+      ...prev,
+      [team]: { ...prev[team], score: Math.max(0, score) },
+    }));
+  }, [setState]);
+
   const setTeamName = useCallback((team: 'home' | 'away', name: string) => {
     setState(prev => ({ ...prev, [team]: { ...prev[team], name } }));
   }, [setState]);
@@ -147,12 +171,28 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, matchName: name }));
   }, [setState]);
 
+  const setPeriod = useCallback((period: Period, clockMs?: number) => {
+    stopInterval();
+    alarmFiredRef.current = false;
+    setState(prev => {
+      const remainingMs = clockMs !== undefined ? clockMs : prev.remainingMs;
+      const clockInitialMs = clockMs !== undefined ? clockMs : prev.clockInitialMs;
+      return {
+        ...prev,
+        period,
+        remainingMs,
+        clockInitialMs,
+        isRunning: false,
+      };
+    });
+  }, [stopInterval, setState]);
+
   const toggleHalftime = useCallback(() => {
     stopInterval();
     setState(prev => ({
       ...prev,
       isRunning: false,
-      period: prev.period === 'halftime' ? 'normal' : 'halftime',
+      period: prev.period === 'halftime' ? '2nd' : 'halftime',
     }));
   }, [stopInterval, setState]);
 
@@ -160,19 +200,36 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     emitBoardEvent({ type: 'triple', team });
   }, []);
 
+  const announceTimeout = useCallback((team: 'home' | 'away', count: number) => {
+    playAlarm('whistle-short', alarmVolume);
+    emitBoardEvent({ type: 'timeout', team, count });
+  }, [alarmVolume]);
+
+  const commitTimeout = useCallback((team: 'home' | 'away') => {
+    setState(prev => {
+      const currentTimeout = prev[team].timeouts || 0;
+      if (currentTimeout >= 3) return prev;
+
+      return {
+        ...prev,
+        [team]: { ...prev[team], timeouts: currentTimeout + 1 },
+      };
+    });
+  }, [setState]);
+
   const triggerTimeout = useCallback((team: 'home' | 'away') => {
     setState(prev => {
       const currentTimeout = prev[team].timeouts || 0;
-      if (currentTimeout >= 3) return prev; // Solo se pueden pedir 3 minutos por equipo
-      
+      if (currentTimeout >= 3) return prev;
+
       const nextTimeout = currentTimeout + 1;
       const nextState = {
         ...prev,
-        [team]: { ...prev[team], timeouts: nextTimeout }
+        [team]: { ...prev[team], timeouts: nextTimeout },
       };
-      
+
       playAlarm('whistle-short', alarmVolume);
-      emitBoardEvent({ type: 'timeout', team });
+      emitBoardEvent({ type: 'timeout', team, count: nextTimeout });
       return nextState;
     });
   }, [setState, alarmVolume]);
@@ -184,6 +241,7 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
 
   const newMatch = useCallback(() => {
     stopInterval();
+    startAlarmPendingRef.current = true;
     setState(DEFAULT_MATCH_STATE);
   }, [stopInterval, setState]);
 
@@ -196,6 +254,16 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const unsub = onStateChange(incoming => {
+      if (!incoming.isRunning) {
+        stopInterval();
+      }
+      setStateRaw(incoming);
+    });
+    return () => unsub();
+  }, [stopInterval]);
+
   return (
     <MatchContext.Provider value={{
       state,
@@ -203,9 +271,9 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
       alarmVolume, setAlarmVolume,
       startClock, pauseClock, resetClock,
       setClockTime, setExtraTime,
-      updateScore, setTeamName, setTeamLogo,
-      setMatchName, toggleHalftime,
-      triggerTriple, triggerTimeout, triggerAlarm, newMatch,
+      updateScore, setScore, setTeamName, setTeamLogo,
+      setMatchName, setPeriod, toggleHalftime,
+      triggerTriple, announceTimeout, commitTimeout, triggerTimeout, triggerAlarm, newMatch,
     }}>
       {children}
     </MatchContext.Provider>

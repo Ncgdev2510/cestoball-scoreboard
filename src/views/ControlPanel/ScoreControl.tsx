@@ -21,7 +21,7 @@ export default function ScoreControl({ team }: Props) {
         <div className="text-[12rem] font-black text-white tabular-nums leading-none select-none tracking-tighter" style={{ textShadow: '0 0 40px rgba(255,255,255,0.1)' }}>
           {score}
         </div>
-        <div className="text-xl font-bold text-amber-500 uppercase tracking-widest mt-[-1rem] mb-4">
+        <div className="text-xl font-bold text-amber-500 uppercase tracking-widest mt-2 mb-2">
           Minutos: {state[team].timeouts}
         </div>
       </div>
