@@ -42,12 +42,12 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
       {/* Dynamic Popups (Triple / Timeout Banner) */}
       <div className="absolute -top-11 flex items-center justify-center transition-all duration-300 pointer-events-none z-20">
         {triple && (
-          <div className="px-5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/40 animate-bounce">
+          <div className="px-5 py-1 rounded-full bg-gradient-to-r from-brand-bronze to-brand-terracotta text-brand-dark font-black text-xs uppercase tracking-widest shadow-lg shadow-brand-bronze/40 animate-bounce">
             ⚡ ¡TRIPLE {triple.team === 'home' ? state.home.name : state.away.name}!
           </div>
         )}
         {timeoutMsg && !triple && (
-          <div className="px-5 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/40 animate-pulse">
+          <div className="px-5 py-1 rounded-full bg-gradient-to-r from-brand-petrol to-brand-steel text-brand-rose font-black text-xs uppercase tracking-widest shadow-lg shadow-brand-steel/40 animate-pulse">
             ⏱️ {timeoutMsg.text}
           </div>
         )}
@@ -56,9 +56,9 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
       {/* Match / Tournament Header placed directly ON TOP of the scoreboard bar */}
       {state.matchName && (
         <div
-          className="px-5 py-0.5 rounded-t-lg text-[10px] font-black tracking-widest uppercase text-slate-200 border-t border-x border-white/25 shadow-md self-center z-10"
+          className="px-5 py-0.5 rounded-t-lg text-[10px] font-black tracking-widest uppercase text-brand-rose border-t border-x border-brand-steel/30 shadow-md self-center z-10"
           style={{
-            backgroundColor: `rgba(18, 22, 34, ${Math.min(1, opacity * 0.96)})`,
+            backgroundColor: `rgba(12, 32, 42, ${Math.min(1, opacity * 0.96)})`,
             marginBottom: '-1px',
           }}
         >
@@ -66,12 +66,12 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
         </div>
       )}
 
-      {/* Main Bar Structure (Inspired by Image 1) */}
+      {/* Main Bar Structure */}
       <div
-        className="flex items-stretch rounded-lg overflow-hidden shadow-2xl border border-white/20 backdrop-blur-md transition-opacity duration-300"
+        className="flex items-stretch rounded-lg overflow-hidden shadow-2xl border border-brand-steel/30 backdrop-blur-md transition-opacity duration-300"
         style={{
-          backgroundColor: `rgba(15, 15, 20, ${opacity})`,
-          boxShadow: '0 10px 30px -5px rgba(0,0,0,0.8), 0 0 1px 1px rgba(255,255,255,0.15) inset',
+          backgroundColor: `rgba(7, 21, 28, ${opacity})`,
+          boxShadow: '0 10px 30px -5px rgba(0,0,0,0.8), 0 0 1px 1px rgba(63,127,158,0.2) inset',
         }}
       >
         {/* Home Team */}
@@ -85,7 +85,7 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
                 className="w-full h-full object-contain"
               />
             ) : (
-              <div className="w-7 h-7 rounded-md bg-blue-700 text-white flex items-center justify-center font-black text-xs">
+              <div className="w-7 h-7 rounded-md bg-brand-petrol text-brand-rose flex items-center justify-center font-black text-xs">
                 {state.home.name.substring(0, 2).toUpperCase()}
               </div>
             )}
@@ -93,30 +93,30 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
           {/* Team Name */}
           <div
             className={`px-4 py-1.5 flex items-center justify-center min-w-[130px] max-w-[180px] transition-colors ${
-              triple?.team === 'home' ? 'bg-amber-500/30' : 'bg-gradient-to-b from-gray-800/80 to-gray-950/90'
+              triple?.team === 'home' ? 'bg-brand-steel/40' : 'bg-gradient-to-r from-brand-petrol/50 to-brand-card/80'
             }`}
           >
-            <span className="text-white font-extrabold text-sm uppercase tracking-wide truncate drop-shadow-md">
+            <span className="text-brand-rose font-extrabold text-sm uppercase tracking-wide truncate drop-shadow-md">
               {state.home.name || 'LOCAL'}
             </span>
           </div>
         </div>
 
         {/* Center Score Badge */}
-        <div className="flex items-center justify-center px-4 bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-950 border-x border-purple-400/30 min-w-[100px] shadow-inner relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+        <div className="flex items-center justify-center px-4 bg-brand-dark border-x border-brand-steel/40 min-w-[100px] shadow-inner relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-steel/15 to-transparent pointer-events-none" />
           <div className="flex items-center gap-2 z-10">
             <span
               className={`font-black text-2xl tabular-nums leading-none transition-transform duration-200 ${
-                triple?.team === 'home' ? 'text-amber-300 scale-125' : 'text-white'
+                triple?.team === 'home' ? 'text-brand-steel scale-125' : 'text-brand-rose'
               }`}
             >
               {state.home.score}
             </span>
-            <span className="text-purple-300/60 font-black text-lg select-none">-</span>
+            <span className="text-brand-steel/40 font-black text-lg select-none">-</span>
             <span
               className={`font-black text-2xl tabular-nums leading-none transition-transform duration-200 ${
-                triple?.team === 'away' ? 'text-amber-300 scale-125' : 'text-white'
+                triple?.team === 'away' ? 'text-brand-terracotta scale-125' : 'text-brand-rose'
               }`}
             >
               {state.away.score}
@@ -129,10 +129,10 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
           {/* Team Name */}
           <div
             className={`px-4 py-1.5 flex items-center justify-center min-w-[130px] max-w-[180px] transition-colors ${
-              triple?.team === 'away' ? 'bg-amber-500/30' : 'bg-gradient-to-b from-gray-800/80 to-gray-950/90'
+              triple?.team === 'away' ? 'bg-brand-bronze/40' : 'bg-gradient-to-l from-brand-bronze/30 to-brand-card/80'
             }`}
           >
-            <span className="text-white font-extrabold text-sm uppercase tracking-wide truncate drop-shadow-md">
+            <span className="text-brand-rose font-extrabold text-sm uppercase tracking-wide truncate drop-shadow-md">
               {state.away.name || 'VISITANTE'}
             </span>
           </div>
@@ -145,7 +145,7 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
                 className="w-full h-full object-contain"
               />
             ) : (
-              <div className="w-7 h-7 rounded-md bg-red-700 text-white flex items-center justify-center font-black text-xs">
+              <div className="w-7 h-7 rounded-md bg-brand-bronze text-white flex items-center justify-center font-black text-xs">
                 {state.away.name.substring(0, 2).toUpperCase()}
               </div>
             )}
@@ -153,12 +153,12 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
         </div>
 
         {/* Clock & Period Section */}
-        <div className="flex items-center bg-gradient-to-r from-slate-900 to-black px-3.5 py-1 border-l border-white/20 min-w-[130px] justify-between gap-3">
+        <div className="flex items-center bg-brand-surface px-3.5 py-1 border-l border-brand-steel/30 min-w-[130px] justify-between gap-3">
           {/* Clock */}
           <div className="flex items-center gap-1.5">           
             <span
               className={`font-black text-base tabular-nums tracking-wider ${
-                clockLow ? 'text-red-400 animate-pulse' : 'text-green-500'
+                clockLow ? 'text-brand-terracotta animate-pulse' : 'text-brand-rose'
               }`}
             >
               {formatMs(state.remainingMs)}
@@ -166,7 +166,7 @@ export const HorizontalBar: React.FC<HorizontalBarProps> = ({
           </div>
 
           {/* Period Badge */}
-          <div className="px-2 py-0.5 rounded bg-white/10 border border-white/10 text-[10px] font-black tracking-wider text-white uppercase">
+          <div className="px-2 py-0.5 rounded bg-brand-petrol/60 border border-brand-steel/40 text-[10px] font-black tracking-wider text-brand-rose uppercase">
             {getPeriodShort(state.period)}
           </div>
         </div>

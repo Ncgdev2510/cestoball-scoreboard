@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { Upload, X } from 'lucide-react';
 import { useMatch } from '../../context/MatchContext';
 
+import { compressImageBase64 } from '../../utils/image';
+
 interface Props {
   team: 'home' | 'away';
 }
@@ -12,7 +14,7 @@ export default function TeamCard({ team }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const label = team === 'home' ? 'Local' : 'Visitante';
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -22,25 +24,35 @@ export default function TeamCard({ team }: Props) {
       }
     };
     reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImageBase64(file, 240, 0.8);
+      setTeamLogo(team, compressed);
+    } catch {
+      // ignore
+    }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">{label}</span>
-      <div className="relative flex items-center justify-center w-full aspect-square max-h-24 bg-gray-800 rounded-xl border border-gray-700 overflow-hidden group cursor-pointer"
-        onClick={() => fileRef.current?.click()}>
+      <span className={`text-xs font-bold uppercase tracking-widest ${team === 'home' ? 'text-brand-steel' : 'text-brand-terracotta'}`}>
+        {label}
+      </span>
+      <div
+        className="relative flex items-center justify-center w-full aspect-square max-h-24 bg-brand-surface rounded-xl border border-brand-steel/30 overflow-hidden group cursor-pointer"
+        onClick={() => fileRef.current?.click()}
+      >
         {teamData.logo ? (
           <>
             <img src={teamData.logo} alt="logo" className="w-full h-full object-contain p-2" />
             <button
               onClick={e => { e.stopPropagation(); setTeamLogo(team, ''); }}
-              className="absolute top-1 right-1 bg-gray-900/80 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-1 right-1 bg-brand-dark/80 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <X size={12} className="text-gray-400" />
+              <X size={12} className="text-brand-rose" />
             </button>
           </>
         ) : (
-          <div className="flex flex-col items-center gap-1 text-gray-600">
+          <div className="flex flex-col items-center gap-1 text-brand-rose/50">
             <Upload size={20} />
             <span className="text-xs">Logo</span>
           </div>
@@ -52,7 +64,7 @@ export default function TeamCard({ team }: Props) {
         value={teamData.name}
         onChange={e => setTeamName(team, e.target.value)}
         placeholder={label}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors text-center"
+        className="w-full bg-brand-surface border border-brand-steel/30 rounded-lg px-3 py-2 text-brand-rose text-sm focus:outline-none focus:border-brand-steel transition-colors text-center placeholder-brand-rose/40"
       />
     </div>
   );

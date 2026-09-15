@@ -15,6 +15,8 @@ export interface MatchState {
   isRunning: boolean;
   period: Period;
   clockInitialMs: number;
+  clockUpdatedAt?: number;
+  updatedAt?: number;
 }
 
 export type TripleAnimation = { team: 'home' | 'away'; triggeredAt: number } | null;
@@ -27,5 +29,7 @@ export const DEFAULT_MATCH_STATE: MatchState = {
   isRunning: false,
   period: 'normal',
   clockInitialMs: 20 * 60 * 1000,
+  clockUpdatedAt: undefined,
+  updatedAt: undefined,
 };
 

@@ -12,6 +12,18 @@ function syncPlugin(): Plugin {
       server.middlewares.use((req, res, next) => {
         if (!req.url) return next();
 
+        // Handle CORS Preflight for all /api/sync/ endpoints
+        if (req.url.startsWith('/api/sync') && req.method === 'OPTIONS') {
+          if (res.headersSent) return;
+          res.writeHead(204, {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          });
+          res.end();
+          return;
+        }
+
         // 1. Get Network Info (LAN IP for QR Code)
         if (req.url.startsWith('/api/sync/info') && req.method === 'GET') {
           const interfaces = os.networkInterfaces();
@@ -26,13 +38,18 @@ function syncPlugin(): Plugin {
             }
           }
 
-          res.writeHead(200, { 'Content-Type': 'application/json' });
+          if (res.headersSent) return;
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          });
           res.end(JSON.stringify({ ips, port: 5173 }));
           return;
         }
 
         // 2. Server-Sent Events (Real-time stream for remote devices)
         if (req.url.startsWith('/api/sync/events') && req.method === 'GET') {
+          if (res.headersSent) return;
           res.writeHead(200, {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache, no-transform',
@@ -45,13 +62,19 @@ function syncPlugin(): Plugin {
           }
 
           const client = {
-            write: (data: string) => res.write(data),
-            end: () => res.end(),
+            write: (data: string) => {
+              if (!res.writableEnded) res.write(data);
+            },
+            end: () => {
+              if (!res.writableEnded) res.end();
+            },
           };
           clients.add(client);
 
           const interval = setInterval(() => {
-            res.write(': keepalive\n\n');
+            if (!res.writableEnded) {
+              res.write(': keepalive\n\n');
+            }
           }, 15000);
 
           req.on('close', () => {
@@ -76,13 +99,18 @@ function syncPlugin(): Plugin {
                   client.write(sseMsg);
                 }
               }
+              if (res.headersSent) return;
               res.writeHead(200, {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
               });
               res.end(JSON.stringify({ ok: true }));
             } catch {
-              res.writeHead(400, { 'Content-Type': 'application/json' });
+              if (res.headersSent) return;
+              res.writeHead(400, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+              });
               res.end(JSON.stringify({ error: 'Invalid JSON' }));
             }
           });
@@ -91,6 +119,7 @@ function syncPlugin(): Plugin {
 
         // 4. Get Current State
         if (req.url.startsWith('/api/sync/state') && req.method === 'GET') {
+          if (res.headersSent) return;
           res.writeHead(200, {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
@@ -113,13 +142,18 @@ function syncPlugin(): Plugin {
                   client.write(sseMsg);
                 }
               }
+              if (res.headersSent) return;
               res.writeHead(200, {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*',
               });
               res.end(JSON.stringify({ ok: true }));
             } catch {
-              res.writeHead(400, { 'Content-Type': 'application/json' });
+              if (res.headersSent) return;
+              res.writeHead(400, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+              });
               res.end(JSON.stringify({ error: 'Invalid Event' }));
             }
           });

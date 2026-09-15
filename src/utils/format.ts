@@ -1,3 +1,14 @@
+import { MatchState } from '../types/match';
+
+export function calculateRemainingMs(state: MatchState): number {
+  if (!state.isRunning) {
+    return Math.max(0, state.remainingMs);
+  }
+  const now = Date.now();
+  const elapsed = state.clockUpdatedAt ? Math.max(0, now - state.clockUpdatedAt) : 0;
+  return Math.max(0, state.remainingMs - elapsed);
+}
+
 export function formatMs(ms: number): string {
   const totalSeconds = Math.ceil(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -13,3 +24,4 @@ export function parseTimeInput(value: string): number | null {
   if (seconds >= 60) return null;
   return (minutes * 60 + seconds) * 1000;
 }
+

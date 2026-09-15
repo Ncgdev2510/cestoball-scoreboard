@@ -1,4 +1,5 @@
 import { MatchState, DEFAULT_MATCH_STATE } from '../types/match';
+import { sanitizeMatchStateLogos } from './image';
 
 const STATE_KEY = 'scoreboard_match_state';
 const EVENT_KEY = 'scoreboard_event';
@@ -7,13 +8,42 @@ const CHANNEL_NAME = 'scoreboard_sync_channel';
 // Create BroadcastChannel for sub-millisecond local tab/window sync
 const broadcastChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(CHANNEL_NAME) : null;
 
-// Track latest saved JSON to prevent echo feedback loops
-const CLIENT_ID = Math.random().toString(36).substring(2, 9);
+// Track client ID to prevent echo feedback loops
+export const CLIENT_ID = Math.random().toString(36).substring(2, 9);
 let lastSentStateJson = '';
+let lastAppliedUpdatedAt = 0;
+
+// Queue management for remote sync to prevent connection pool exhaustion
+let isSyncing = false;
+let pendingStateToSync: MatchState | null = null;
+
+async function doSyncPost(stateToPost: MatchState): Promise<void> {
+  isSyncing = true;
+  const payload = { state: stateToPost, clientId: CLIENT_ID };
+  try {
+    await fetch('/api/sync/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    // Silent fail if standalone or offline
+  } finally {
+    isSyncing = false;
+    if (pendingStateToSync) {
+      const nextState = pendingStateToSync;
+      pendingStateToSync = null;
+      void doSyncPost(nextState);
+    }
+  }
+}
 
 export function saveState(state: MatchState): void {
-  const payload = { state, clientId: CLIENT_ID };
-  const json = JSON.stringify(state);
+  const timestamp = state.updatedAt || Date.now();
+  const stateWithTime: MatchState = { ...state, updatedAt: timestamp };
+  lastAppliedUpdatedAt = Math.max(lastAppliedUpdatedAt, timestamp);
+
+  const json = JSON.stringify(stateWithTime);
   try {
     localStorage.setItem(STATE_KEY, json);
   } catch {
@@ -23,7 +53,7 @@ export function saveState(state: MatchState): void {
   // 1. BroadcastChannel (local tabs / popups)
   if (broadcastChannel) {
     try {
-      broadcastChannel.postMessage({ type: 'state', payload: state, clientId: CLIENT_ID });
+      broadcastChannel.postMessage({ type: 'state', payload: stateWithTime, clientId: CLIENT_ID });
     } catch {
       // ignore
     }
@@ -32,13 +62,11 @@ export function saveState(state: MatchState): void {
   // 2. Remote Server Sync (LAN / Celulares / OBS across origins)
   if (json !== lastSentStateJson) {
     lastSentStateJson = json;
-    void fetch('/api/sync/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }).catch(() => {
-      // Silent fail if standalone or offline
-    });
+    if (isSyncing) {
+      pendingStateToSync = stateWithTime;
+    } else {
+      void doSyncPost(stateWithTime);
+    }
   }
 }
 
@@ -48,12 +76,25 @@ export function loadState(): MatchState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as MatchState;
     
-    return {
+    const loaded: MatchState = {
       ...DEFAULT_MATCH_STATE,
       ...parsed,
       home: { ...DEFAULT_MATCH_STATE.home, ...parsed.home },
       away: { ...DEFAULT_MATCH_STATE.away, ...parsed.away },
     };
+
+    if (loaded.updatedAt) {
+      lastAppliedUpdatedAt = Math.max(lastAppliedUpdatedAt, loaded.updatedAt);
+    }
+
+    // Sanitize oversized logos asynchronously in the background
+    if ((loaded.home?.logo && loaded.home.logo.length > 40000) || (loaded.away?.logo && loaded.away.logo.length > 40000)) {
+      void sanitizeMatchStateLogos(loaded).then(sanitized => {
+        saveState(sanitized);
+      });
+    }
+
+    return loaded;
   } catch {
     return null;
   }
@@ -100,12 +141,43 @@ export function emitBoardEvent(event: Omit<BoardEvent, 'timestamp'>): void {
 }
 
 export function onStateChange(callback: (state: MatchState) => void): () => void {
+  const handleIncomingState = (incoming: MatchState) => {
+    if (!incoming) return;
+
+    // Discard stale updates
+    if (incoming.updatedAt && incoming.updatedAt < lastAppliedUpdatedAt) {
+      return;
+    }
+
+    const newTimestamp = incoming.updatedAt || Date.now();
+    lastAppliedUpdatedAt = Math.max(lastAppliedUpdatedAt, newTimestamp);
+
+    // Keep localStorage and lastSentStateJson in sync with remote
+    const json = JSON.stringify(incoming);
+    lastSentStateJson = json;
+    try {
+      localStorage.setItem(STATE_KEY, json);
+    } catch {
+      // ignore
+    }
+
+    callback(incoming);
+
+    // If incoming state had giant logos, sanitize in background
+    if ((incoming.home?.logo && incoming.home.logo.length > 40000) || (incoming.away?.logo && incoming.away.logo.length > 40000)) {
+      void sanitizeMatchStateLogos(incoming).then(sanitized => {
+        saveState(sanitized);
+      });
+    }
+  };
+
   // 1. LocalStorage StorageEvent
   const storageHandler = (e: StorageEvent) => {
     if (e.key === STATE_KEY && e.newValue) {
       try {
         const parsed = JSON.parse(e.newValue) as MatchState;
         callback(parsed);
+        handleIncomingState(parsed);
       } catch {
         // ignore
       }
@@ -118,6 +190,7 @@ export function onStateChange(callback: (state: MatchState) => void): () => void
     if (e.data?.clientId === CLIENT_ID) return; // Skip own messages
     if (e.data?.type === 'state' && e.data?.payload) {
       callback(e.data.payload as MatchState);
+      handleIncomingState(e.data.payload as MatchState);
     }
   };
   broadcastChannel?.addEventListener('message', bcHandler);
@@ -133,6 +206,7 @@ export function onStateChange(callback: (state: MatchState) => void): () => void
           if (raw?.clientId === CLIENT_ID) return; // Skip own messages
           const stateData = raw?.state || raw;
           callback(stateData as MatchState);
+          handleIncomingState(stateData as MatchState);
         } catch {
           // ignore
         }

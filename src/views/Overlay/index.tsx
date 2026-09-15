@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { MatchState, DEFAULT_MATCH_STATE } from '../../types/match';
 import { loadState, onStateChange, onBoardEvent, BoardEvent } from '../../utils/storage';
+import { calculateRemainingMs } from '../../utils/format';
 import { HorizontalBar } from './HorizontalBar';
 import { CompactBadge } from './CompactBadge';
 import { Sliders, Eye, EyeOff } from 'lucide-react';
@@ -14,11 +15,45 @@ interface TripleAnim {
 }
 
 export default function Overlay() {
-  const [state, setState] = useState<MatchState>(() => loadState() ?? DEFAULT_MATCH_STATE);
+  const [state, setState] = useState<MatchState>(() => {
+    const loaded = loadState() ?? DEFAULT_MATCH_STATE;
+    return { ...loaded, remainingMs: calculateRemainingMs(loaded) };
+  });
   const [triple, setTriple] = useState<TripleAnim | null>(null);
   const [timeoutMsg, setTimeoutMsg] = useState<{ text: string; id: number } | null>(null);
   const tripleTimeoutRef = useRef<number | null>(null);
   const timeoutMsgTimeoutRef = useRef<number | null>(null);
+  const runningAnchorRef = useRef<{ baseRemaining: number; anchorTime: number } | null>(null);
+
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Local ticker for smooth clock display when isRunning is true (zero drift)
+  useEffect(() => {
+    if (!state.isRunning) {
+      runningAnchorRef.current = null;
+      return;
+    }
+
+    if (!runningAnchorRef.current) {
+      runningAnchorRef.current = {
+        baseRemaining: state.remainingMs,
+        anchorTime: state.clockUpdatedAt || Date.now(),
+      };
+    }
+
+    const interval = window.setInterval(() => {
+      if (!runningAnchorRef.current) return;
+      const now = Date.now();
+      const elapsed = now - runningAnchorRef.current.anchorTime;
+      const remaining = Math.max(0, runningAnchorRef.current.baseRemaining - elapsed);
+      setState(prev => ({ ...prev, remainingMs: remaining }));
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [state.isRunning, state.clockUpdatedAt]);
 
   // Configuration state with URL query defaults
   const params = new URLSearchParams(window.location.search);
@@ -32,7 +67,17 @@ export default function Overlay() {
   const [showToolbar, setShowToolbar] = useState(params.get('toolbar') === 'true');
 
   useEffect(() => {
-    const offState = onStateChange(s => setState(s));
+    const offState = onStateChange(s => {
+      if (s.isRunning) {
+        runningAnchorRef.current = {
+          baseRemaining: s.remainingMs,
+          anchorTime: s.clockUpdatedAt || Date.now(),
+        };
+      } else {
+        runningAnchorRef.current = null;
+      }
+      setState({ ...s, remainingMs: calculateRemainingMs(s) });
+    });
     const offEvent = onBoardEvent((event: BoardEvent) => {
       if (event.type === 'triple' && event.team) {
         if (tripleTimeoutRef.current) clearTimeout(tripleTimeoutRef.current);
@@ -76,13 +121,13 @@ export default function Overlay() {
           showToolbar ? 'opacity-100' : 'opacity-0 hover:opacity-100 pointer-events-auto'
         }`}
       >
-        <div className="bg-slate-900/90 border border-slate-700/80 backdrop-blur-md rounded-xl p-2.5 shadow-2xl text-xs text-white flex items-center gap-3">
+        <div className="bg-brand-card/95 border border-brand-steel/40 backdrop-blur-md rounded-xl p-2.5 shadow-2xl text-xs text-brand-rose flex items-center gap-3">
           {/* Style Selector */}
-          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-brand-dark/80 p-1 rounded-lg border border-brand-steel/20">
             <button
               onClick={() => setOverlayStyle('bar')}
               className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                overlayStyle === 'bar' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                overlayStyle === 'bar' ? 'bg-brand-steel text-white shadow' : 'text-brand-rose/60 hover:text-white'
               }`}
             >
               Barra Inferior
@@ -90,7 +135,7 @@ export default function Overlay() {
             <button
               onClick={() => setOverlayStyle('badge')}
               className={`px-2 py-1 rounded text-[11px] font-bold transition-all ${
-                overlayStyle === 'badge' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                overlayStyle === 'badge' ? 'bg-brand-steel text-white shadow' : 'text-brand-rose/60 hover:text-white'
               }`}
             >
               Tarjeta Lateral
@@ -98,24 +143,24 @@ export default function Overlay() {
           </div>
 
           {/* Position Selector */}
-          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg">
+          <div className="flex items-center gap-1 bg-brand-dark/80 p-1 rounded-lg border border-brand-steel/20">
             <button
               onClick={() => setPosition('bottom-left')}
-              className={`px-1.5 py-0.5 rounded text-[10px] ${position === 'bottom-left' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              className={`px-1.5 py-0.5 rounded text-[10px] ${position === 'bottom-left' ? 'bg-brand-steel text-white' : 'text-brand-rose/60'}`}
               title="Inferior Izquierda"
             >
               Izq
             </button>
             <button
               onClick={() => setPosition('bottom-center')}
-              className={`px-1.5 py-0.5 rounded text-[10px] ${position === 'bottom-center' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              className={`px-1.5 py-0.5 rounded text-[10px] ${position === 'bottom-center' ? 'bg-brand-steel text-white' : 'text-brand-rose/60'}`}
               title="Inferior Centro"
             >
               Centro
             </button>
             <button
               onClick={() => setPosition('bottom-right')}
-              className={`px-1.5 py-0.5 rounded text-[10px] ${position === 'bottom-right' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
+              className={`px-1.5 py-0.5 rounded text-[10px] ${position === 'bottom-right' ? 'bg-brand-steel text-white' : 'text-brand-rose/60'}`}
               title="Inferior Derecha"
             >
               Der
@@ -124,7 +169,7 @@ export default function Overlay() {
 
           {/* Opacity Slider */}
           <div className="flex items-center gap-2 px-1">
-            <Sliders size={13} className="text-slate-400" />
+            <Sliders size={13} className="text-brand-steel" />
             <input
               type="range"
               min="0.4"
@@ -132,16 +177,16 @@ export default function Overlay() {
               step="0.05"
               value={opacity}
               onChange={e => setOpacity(parseFloat(e.target.value))}
-              className="w-16 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              className="w-16 h-1 bg-brand-surface rounded-lg appearance-none cursor-pointer accent-brand-steel"
               title={`Opacidad: ${Math.round(opacity * 100)}%`}
             />
-            <span className="text-[10px] font-mono text-slate-300 w-7">{Math.round(opacity * 100)}%</span>
+            <span className="text-[10px] font-mono text-brand-rose w-7">{Math.round(opacity * 100)}%</span>
           </div>
 
           {/* Hide/Show Toggle */}
           <button
             onClick={() => setShowToolbar(!showToolbar)}
-            className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-brand-surface text-brand-rose/60 hover:text-white transition-colors"
             title={showToolbar ? 'Ocultar barra de ajustes' : 'Fijar barra de ajustes'}
           >
             {showToolbar ? <EyeOff size={14} /> : <Eye size={14} />}

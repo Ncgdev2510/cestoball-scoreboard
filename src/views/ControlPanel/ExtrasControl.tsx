@@ -151,15 +151,15 @@ export default function ExtrasControl() {
         <button
           onClick={() => handleMinuteTimeout('home')}
           disabled={state.home.timeouts >= 3 && minuteTimerTeam !== 'home'}
-          className={`flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl text-sm transition-all active:scale-95 border border-[#d58e30] disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl text-sm transition-all active:scale-95 border disabled:opacity-50 disabled:cursor-not-allowed ${
             minuteTimerTeam === 'home'
-              ? 'bg-blue-700 hover:bg-blue-600 active:bg-blue-800'
+              ? 'bg-brand-steel hover:bg-brand-steel/90 active:bg-brand-petrol border-brand-steel'
               : minuteHomeStartConfirm.isConfirming && !minuteTimerTeam
-                ? 'bg-red-700 hover:bg-red-600 active:bg-red-800 animate-pulse'
-                : 'bg-[#b96d0f] hover:bg-[#c97a17] active:bg-[#9f5c0b]'
+                ? 'bg-brand-bronze hover:bg-brand-bronze/90 active:bg-brand-bronze/80 text-white animate-pulse border-brand-terracotta'
+                : 'bg-brand-petrol hover:bg-brand-steel active:bg-brand-petrol text-brand-rose border-brand-steel/40'
           }`}
         >
-          <Clock size={18} className="text-amber-100" />
+          <Clock size={18} className="text-brand-rose" />
           {minuteTimerTeam === 'home'
             ? minuteTimerPaused ? 'Reanudar L' : 'Pausar L'
             : minuteHomeStartConfirm.isConfirming && !minuteTimerTeam
@@ -169,15 +169,15 @@ export default function ExtrasControl() {
         <button
           onClick={() => handleMinuteTimeout('away')}
           disabled={state.away.timeouts >= 3 && minuteTimerTeam !== 'away'}
-          className={`flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl text-sm transition-all active:scale-95 border border-[#d58e30] disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl text-sm transition-all active:scale-95 border disabled:opacity-50 disabled:cursor-not-allowed ${
             minuteTimerTeam === 'away'
-              ? 'bg-blue-700 hover:bg-blue-600 active:bg-blue-800'
+              ? 'bg-brand-bronze hover:bg-brand-bronze/90 active:bg-brand-bronze/80 border-brand-bronze'
               : minuteAwayStartConfirm.isConfirming && !minuteTimerTeam
-                ? 'bg-red-700 hover:bg-red-600 active:bg-red-800 animate-pulse'
-                : 'bg-[#b96d0f] hover:bg-[#c97a17] active:bg-[#9f5c0b]'
+                ? 'bg-brand-terracotta hover:bg-brand-terracotta/90 text-brand-dark animate-pulse border-brand-bronze'
+                : 'bg-brand-bronze/80 hover:bg-brand-bronze active:bg-brand-bronze/90 text-white border-brand-bronze/40'
           }`}
         >
-          <Clock size={18} className="text-amber-100" />
+          <Clock size={18} className="text-brand-rose" />
           {minuteTimerTeam === 'away'
             ? minuteTimerPaused ? 'Reanudar V' : 'Pausar V'
             : minuteAwayStartConfirm.isConfirming && !minuteTimerTeam
@@ -186,7 +186,7 @@ export default function ExtrasControl() {
         </button>
       </div>
       {minuteTimerTeam && (
-        <div className="rounded-xl border border-amber-700/40 bg-amber-900/20 py-2 text-center text-sm font-semibold text-amber-200">
+        <div className="rounded-xl border border-brand-bronze/40 bg-brand-card/90 py-2 text-center text-sm font-semibold text-brand-rose">
           {minuteTimerTeam === 'home' ? 'Minuto L' : 'Minuto V'}: {minuteTimerLabel} {minuteTimerPaused ? '(Pausado)' : ''}
         </div>
       )}
@@ -195,8 +195,8 @@ export default function ExtrasControl() {
           onClick={cancelMinuteTimeout}
           className={`flex items-center justify-center gap-2 font-bold py-3 rounded-xl text-xs transition-all active:scale-95 border ${
             minuteCancelConfirm.isConfirming
-              ? 'bg-red-700 hover:bg-red-600 active:bg-red-800 text-white border-red-500/60 animate-pulse'
-              : 'bg-[#1a1a1a] hover:bg-red-900/40 text-gray-400 hover:text-red-200 border-white/5'
+              ? 'bg-brand-bronze hover:bg-brand-bronze/90 text-white border-brand-terracotta animate-pulse'
+              : 'bg-brand-surface hover:bg-brand-card text-brand-terracotta hover:text-brand-rose border-brand-bronze/30'
           }`}
           title={minuteCancelConfirm.isConfirming ? `Confirmar cancelación (${minuteCancelConfirm.confirmSeconds})` : 'Cancelar minuto en curso'}
         >
@@ -206,7 +206,7 @@ export default function ExtrasControl() {
         </button>
       )}
       {minuteTimerTeam && minuteCancelConfirm.isConfirming && (
-        <div className="rounded-xl border border-red-700/50 bg-red-900/20 py-2 text-center text-xs font-semibold text-red-200">
+        <div className="rounded-xl border border-brand-bronze/50 bg-brand-bronze/20 py-2 text-center text-xs font-semibold text-brand-terracotta">
           Confirmar cancelar/cambiar minuto ({minuteCancelConfirm.confirmSeconds})
         </div>
       )}
@@ -214,14 +214,14 @@ export default function ExtrasControl() {
         onClick={handleTogglePeriod}
         className={`flex items-center justify-center gap-2 font-bold py-4 rounded-xl text-sm transition-all active:scale-95 border ${
           periodConfirm.isConfirming
-            ? 'bg-red-700 hover:bg-red-600 active:bg-red-800 text-white border-red-500/60 shadow-lg animate-pulse'
+            ? 'bg-brand-bronze hover:bg-brand-bronze/90 text-white border-brand-terracotta/60 shadow-lg animate-pulse'
             : isHalftime
-              ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500 shadow-lg'
-              : 'bg-[#1a1a1a] text-gray-400 hover:text-white border-white/5 hover:bg-[#252525]'
+              ? 'bg-brand-steel text-white border-brand-steel hover:bg-brand-steel/90 shadow-lg'
+              : 'bg-brand-surface text-brand-rose hover:text-white border border-brand-steel/30 hover:bg-brand-petrol'
         }`}
         title={periodConfirm.isConfirming ? `Confirmar cambio de período (${periodConfirm.confirmSeconds})` : isHalftime ? 'Finalizar entretiempo' : 'Iniciar entretiempo'}
       >
-        <Coffee size={18} className={periodConfirm.isConfirming || isHalftime ? 'text-white' : 'text-gray-500'} />
+        <Coffee size={18} className={periodConfirm.isConfirming || isHalftime ? 'text-white' : 'text-brand-steel'} />
         {periodConfirm.isConfirming
           ? `Confirmar (${periodConfirm.confirmSeconds})`
           : isHalftime
@@ -232,8 +232,8 @@ export default function ExtrasControl() {
         onClick={handleNewMatch}
         className={`flex items-center justify-center gap-2 font-bold py-4 rounded-xl text-sm transition-all active:scale-95 border ${
           newMatchConfirm.isConfirming
-            ? 'bg-red-700 hover:bg-red-600 active:bg-red-800 text-white border-red-500/60 animate-pulse'
-            : 'bg-[#1a1a1a] hover:bg-red-900/40 text-gray-500 hover:text-red-200 border border-white/5'
+            ? 'bg-brand-bronze hover:bg-brand-bronze/90 text-white border-brand-terracotta animate-pulse'
+            : 'bg-brand-surface hover:bg-brand-card text-brand-terracotta hover:text-brand-rose border border-brand-terracotta/30'
         }`}
         title={newMatchConfirm.isConfirming ? `Confirmar nuevo partido (${newMatchConfirm.confirmSeconds})` : 'Iniciar nuevo partido'}
       >

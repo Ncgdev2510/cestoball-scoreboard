@@ -9,6 +9,8 @@ import React, {
 import { MatchState, DEFAULT_MATCH_STATE, Period } from '../types/match';
 import { AlarmType, playAlarm } from '../utils/audio';
 import { saveState, loadState, emitBoardEvent, onStateChange } from '../utils/storage';
+import { calculateRemainingMs } from '../utils/format';
+import { compressImageBase64 } from '../utils/image';
 
 interface MatchContextValue {
   state: MatchState;
@@ -46,14 +48,27 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
   const [alarmType, setAlarmType] = useState<AlarmType>('buzzer');
   const [alarmVolume, setAlarmVolume] = useState(80);
 
+  const stateRef = useRef<MatchState>(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   const intervalRef = useRef<number | null>(null);
   const lastTickRef = useRef<number | null>(null);
+  const heartbeatIntervalRef = useRef<number | null>(null);
   const alarmFiredRef = useRef(false);
   const startAlarmPendingRef = useRef(true);
+  const runningAnchorRef = useRef<{ baseRemaining: number; anchorTime: number } | null>(null);
 
+  // Helper to update state locally AND broadcast to other devices
   const setState = useCallback((updater: MatchState | ((prev: MatchState) => MatchState)) => {
     setStateRaw(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
+      const computed = typeof updater === 'function' ? updater(prev) : updater;
+      const next: MatchState = {
+        ...computed,
+        updatedAt: Date.now(),
+      };
+      stateRef.current = next;
       saveState(next);
       return next;
     });
@@ -65,70 +80,95 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
       intervalRef.current = null;
     }
     lastTickRef.current = null;
+    if (heartbeatIntervalRef.current !== null) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
   }, []);
+
+  const pauseClock = useCallback(() => {
+    stopInterval();
+    const now = Date.now();
+    const currentRemaining = runningAnchorRef.current
+      ? Math.max(0, runningAnchorRef.current.baseRemaining - (now - runningAnchorRef.current.anchorTime))
+      : stateRef.current.remainingMs;
+    runningAnchorRef.current = null;
+
+    setState(prev => ({
+      ...prev,
+      remainingMs: currentRemaining,
+      clockUpdatedAt: now,
+      isRunning: false,
+    }));
+  }, [stopInterval, setState]);
 
   const startClock = useCallback(() => {
     stopInterval();
-    lastTickRef.current = Date.now();
+    const now = Date.now();
     alarmFiredRef.current = false;
+
     setState(prev => {
+      const currentRemaining = prev.remainingMs;
+      if (currentRemaining <= 0) {
+        return prev;
+      }
+
+      runningAnchorRef.current = {
+        baseRemaining: currentRemaining,
+        anchorTime: now,
+      };
+
       const isOfficialStartTime =
-        prev.remainingMs === 20 * 60 * 1000 || prev.remainingMs === 3 * 60 * 1000;
+        currentRemaining === 20 * 60 * 1000 || currentRemaining === 3 * 60 * 1000;
 
       if (
         startAlarmPendingRef.current &&
-        prev.remainingMs === prev.clockInitialMs &&
+        currentRemaining === prev.clockInitialMs &&
         isOfficialStartTime
       ) {
         playAlarm('buzzer', alarmVolume);
       }
 
       startAlarmPendingRef.current = false;
-      return { ...prev, isRunning: true };
-    });
-    intervalRef.current = window.setInterval(() => {
-      const now = Date.now();
-      const elapsed = now - (lastTickRef.current ?? now);
-      lastTickRef.current = now;
-      setStateRaw(prev => {
-        const next = Math.max(0, prev.remainingMs - elapsed);
-        if (next === 0 && !alarmFiredRef.current) {
-          alarmFiredRef.current = true;
-          playAlarm('buzzer', alarmVolume); // Siempre bocina al final
-          emitBoardEvent({ type: 'alarm' });
-          stopInterval();
-          const updated = { ...prev, remainingMs: 0, isRunning: false };
-          saveState(updated);
-          return updated;
-        }
-        const updated = { ...prev, remainingMs: next, isRunning: next > 0 };
-        saveState(updated);
-        return updated;
-      });
-    }, 50);
-  }, [stopInterval, setState, alarmType, alarmVolume]);
 
-  const pauseClock = useCallback(() => {
-    stopInterval();
-    setState(prev => ({ ...prev, isRunning: false }));
-  }, [stopInterval, setState]);
+      return {
+        ...prev,
+        remainingMs: currentRemaining,
+        clockUpdatedAt: now,
+        isRunning: true,
+      };
+    });
+  }, [stopInterval, setState, alarmVolume]);
 
   const resetClock = useCallback(() => {
     stopInterval();
     alarmFiredRef.current = false;
     startAlarmPendingRef.current = true;
-    setState(prev => ({
-      ...prev,
-      remainingMs: prev.clockInitialMs,
-      isRunning: false,
-    }));
+    runningAnchorRef.current = null;
+    setState(prev => {
+      const initial = prev.clockInitialMs > 0 ? prev.clockInitialMs : (20 * 60 * 1000);
+      return {
+        ...prev,
+        remainingMs: initial,
+        clockInitialMs: initial,
+        clockUpdatedAt: Date.now(),
+        isRunning: false,
+      };
+    });
   }, [stopInterval, setState]);
 
   const setClockTime = useCallback((ms: number) => {
     stopInterval();
     alarmFiredRef.current = false;
     startAlarmPendingRef.current = false;
-    setState(prev => ({ ...prev, remainingMs: ms, clockInitialMs: ms, isRunning: false }));
+    runningAnchorRef.current = null;
+    setState(prev => ({
+      ...prev,
+      remainingMs: ms,
+      clockInitialMs: ms,
+      clockUpdatedAt: Date.now(),
+      isRunning: false,
+    }));
   }, [stopInterval, setState]);
 
   const setExtraTime = useCallback(() => {
@@ -136,25 +176,55 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
     stopInterval();
     alarmFiredRef.current = false;
     startAlarmPendingRef.current = true;
+    runningAnchorRef.current = null;
     setState(prev => ({
       ...prev,
       remainingMs: extraMs,
       clockInitialMs: extraMs,
+      clockUpdatedAt: Date.now(),
       isRunning: false,
-      period: prev.period === 'normal' ? 'extra1' : 'extra2' as Period,
+      period: (prev.period === 'normal' || prev.period === '1st' || prev.period === '2nd') ? 'extra1' : 'extra2' as Period,
     }));
   }, [stopInterval, setState]);
 
   const updateScore = useCallback((team: 'home' | 'away', delta: number) => {
+    const now = Date.now();
+    const currentRemaining = runningAnchorRef.current
+      ? Math.max(0, runningAnchorRef.current.baseRemaining - (now - runningAnchorRef.current.anchorTime))
+      : stateRef.current.remainingMs;
+
+    if (runningAnchorRef.current) {
+      runningAnchorRef.current = {
+        baseRemaining: currentRemaining,
+        anchorTime: now,
+      };
+    }
+
     setState(prev => ({
       ...prev,
+      remainingMs: currentRemaining,
+      clockUpdatedAt: prev.isRunning ? now : prev.clockUpdatedAt,
       [team]: { ...prev[team], score: Math.max(0, prev[team].score + delta) },
     }));
   }, [setState]);
 
   const setScore = useCallback((team: 'home' | 'away', score: number) => {
+    const now = Date.now();
+    const currentRemaining = runningAnchorRef.current
+      ? Math.max(0, runningAnchorRef.current.baseRemaining - (now - runningAnchorRef.current.anchorTime))
+      : stateRef.current.remainingMs;
+
+    if (runningAnchorRef.current) {
+      runningAnchorRef.current = {
+        baseRemaining: currentRemaining,
+        anchorTime: now,
+      };
+    }
+
     setState(prev => ({
       ...prev,
+      remainingMs: currentRemaining,
+      clockUpdatedAt: prev.isRunning ? now : prev.clockUpdatedAt,
       [team]: { ...prev[team], score: Math.max(0, score) },
     }));
   }, [setState]);
@@ -165,6 +235,9 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
 
   const setTeamLogo = useCallback((team: 'home' | 'away', logo: string) => {
     setState(prev => ({ ...prev, [team]: { ...prev[team], logo } }));
+    void compressImageBase64(logo, 240, 0.8).then(compressed => {
+      setState(prev => ({ ...prev, [team]: { ...prev[team], logo: compressed } }));
+    });
   }, [setState]);
 
   const setMatchName = useCallback((name: string) => {
@@ -174,14 +247,16 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
   const setPeriod = useCallback((period: Period, clockMs?: number) => {
     stopInterval();
     alarmFiredRef.current = false;
+    runningAnchorRef.current = null;
     setState(prev => {
-      const remainingMs = clockMs !== undefined ? clockMs : prev.remainingMs;
+      const remainingMs = clockMs !== undefined ? clockMs : (prev.remainingMs > 0 ? prev.remainingMs : (prev.clockInitialMs || 20 * 60 * 1000));
       const clockInitialMs = clockMs !== undefined ? clockMs : prev.clockInitialMs;
       return {
         ...prev,
         period,
         remainingMs,
         clockInitialMs,
+        clockUpdatedAt: Date.now(),
         isRunning: false,
       };
     });
@@ -189,9 +264,11 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
 
   const toggleHalftime = useCallback(() => {
     stopInterval();
+    runningAnchorRef.current = null;
     setState(prev => ({
       ...prev,
       isRunning: false,
+      clockUpdatedAt: Date.now(),
       period: prev.period === 'halftime' ? '2nd' : 'halftime',
     }));
   }, [stopInterval, setState]);
@@ -241,26 +318,105 @@ export function MatchProvider({ children }: { children: React.ReactNode }) {
 
   const newMatch = useCallback(() => {
     stopInterval();
+    runningAnchorRef.current = null;
     startAlarmPendingRef.current = true;
     setState(DEFAULT_MATCH_STATE);
   }, [stopInterval, setState]);
 
+  // Handle local countdown rendering whenever state.isRunning is active
+  // Uses fixed anchor time to guarantee exact 1-second-per-second decrement
   useEffect(() => {
-    if (state.isRunning) {
-      startClock();
+    if (!state.isRunning) {
+      stopInterval();
+      runningAnchorRef.current = null;
+      return;
     }
-    return () => stopInterval();
-  // Only run on mount to restore running state
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
+    if (!runningAnchorRef.current) {
+      runningAnchorRef.current = {
+        baseRemaining: state.remainingMs,
+        anchorTime: state.clockUpdatedAt || Date.now(),
+      };
+    }
+
+    // Local UI update interval (50ms)
+    intervalRef.current = window.setInterval(() => {
+      if (!runningAnchorRef.current) return;
+
+      const now = Date.now();
+      const elapsed = now - runningAnchorRef.current.anchorTime;
+      const remaining = Math.max(0, runningAnchorRef.current.baseRemaining - elapsed);
+
+      if (remaining <= 0) {
+        if (!alarmFiredRef.current) {
+          alarmFiredRef.current = true;
+          playAlarm('buzzer', alarmVolume);
+          emitBoardEvent({ type: 'alarm' });
+          stopInterval();
+          runningAnchorRef.current = null;
+          setState(prev => ({
+            ...prev,
+            remainingMs: 0,
+            isRunning: false,
+            clockUpdatedAt: Date.now(),
+          }));
+        }
+        return;
+      }
+
+      // Update local state ONLY for smooth display (no HTTP saveState on every frame!)
+      setStateRaw(prev => ({
+        ...prev,
+        remainingMs: remaining,
+      }));
+    }, 50);
+
+    // Passive Heartbeat (every 5 seconds) to ensure synchronization consistency
+    heartbeatIntervalRef.current = window.setInterval(() => {
+      const current = stateRef.current;
+      if (current.isRunning && runningAnchorRef.current) {
+        const now = Date.now();
+        const currentRemaining = Math.max(0, runningAnchorRef.current.baseRemaining - (now - runningAnchorRef.current.anchorTime));
+        saveState({
+          ...current,
+          remainingMs: currentRemaining,
+          clockUpdatedAt: now,
+        });
+      }
+    }, 5000);
+
+    return () => stopInterval();
+  }, [state.isRunning, state.clockUpdatedAt, stopInterval, alarmVolume, setState]);
+
+  // Sync listener: handle incoming updates from other devices/windows
   useEffect(() => {
     const unsub = onStateChange(incoming => {
+      if (!incoming) return;
+
       if (!incoming.isRunning) {
         stopInterval();
+        runningAnchorRef.current = null;
+        setStateRaw(incoming);
+        stateRef.current = incoming;
+        return;
       }
-      setStateRaw(incoming);
+
+      // Remote is running
+      const effectiveRemaining = calculateRemainingMs(incoming);
+      runningAnchorRef.current = {
+        baseRemaining: incoming.remainingMs,
+        anchorTime: incoming.clockUpdatedAt || Date.now(),
+      };
+
+      const synchronizedState = {
+        ...incoming,
+        remainingMs: effectiveRemaining,
+      };
+
+      stateRef.current = synchronizedState;
+      setStateRaw(synchronizedState);
     });
+
     return () => unsub();
   }, [stopInterval]);
 
